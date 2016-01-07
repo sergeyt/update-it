@@ -1,42 +1,60 @@
 import _ from 'lodash';
+import applyPatch from './patch';
 
-// TODO support mongodb patch commands
+export { applyPatch };
 
-export function updateObject(obj, update, isSelected) {
+/* eslint-disable no-use-before-define */
+
+function updateObjectImpl(obj, update, isSelected) {
 	if (isSelected(obj)) {
 		return update(obj);
 	}
 	let result = obj;
 	let changed = false;
 	_.forOwn(obj, (val, key) => {
-		const newVal = updateValue(val, update, isSelected);
-		if (newVal === val) {
+		const newval = updateValue(val, update, isSelected);
+		if (newval === val) {
 			return;
 		}
 		if (!changed) {
 			result = { ...obj };
 			changed = true;
 		}
-		result[key] = newVal;
+		result[key] = newval;
 	});
 	return result;
 }
 
+function makeUpdateFn(update) {
+	if (_.isFunction(update)) {
+		return update;
+	}
+	return target => applyPatch(target, update);
+}
+
+function selectAny() { return true; }
+
+export function updateObject(obj, update, isSelected = selectAny) {
+	return updateObjectImpl(obj, makeUpdateFn(update), isSelected);
+}
+
+export default updateObject;
+
 function updateValue(val, update, isSelected) {
 	if (_.isArray(val)) {
-		return updateArray(val, update, isSelected);
+		return updateArrayImpl(val, update, isSelected);
 	}
 	if (_.isObject(val)) {
-		return updateObject(val, update, isSelected);
+		return updateObjectImpl(val, update, isSelected);
 	}
 	return val;
 }
 
-export function updateArray(array, update, isSelected) {
+function updateArrayImpl(array, update, isSelected) {
 	let copied = false;
 	let result = array;
 	array.forEach((t, i) => {
-		const t2 = updateObject(t, update, isSelected);
+		const t2 = updateObjectImpl(t, update, isSelected);
 		if (t2 === t) {
 			return;
 		}
@@ -48,3 +66,9 @@ export function updateArray(array, update, isSelected) {
 	});
 	return result;
 }
+
+export function updateArray(array, update, isSelected = selectAny) {
+	return updateArrayImpl(array, makeUpdateFn(update), isSelected);
+}
+
+/* eslint-enable */
