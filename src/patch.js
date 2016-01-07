@@ -3,6 +3,15 @@ import _ from 'lodash';
 // TODO support all mongodb update operators
 // TODO invariant checks
 
+function shallowCopy(t) {
+	if (Array.isArray(t)) {
+		return [...t];
+	} else if (t && typeof t === 'object') {
+		return Object.assign(new t.constructor(), t);
+	}
+	return t;
+}
+
 function expectObject(t) {
 	if (!_.isObject(t)) {
 		throw new Error('expected object');
@@ -27,77 +36,90 @@ export function applyPatch(obj, patch) {
 		result = { ...obj };
 	}
 
-	function findTarget(key) {
+	function findTarget(key, mutable) {
 		if (key.indexOf('.') < 0) {
-			return { target: obj, key };
+			if (mutable) {
+				copy();
+				result[key] = shallowCopy(result[key]);
+			}
+			return { target: result, key };
 		}
 		const path = key.split('.');
-		if (path.length === 1) {
-			return { target: obj, key };
-		}
-		const ps = path.slice(0, path.length - 1).join('.');
-		if (_.get(obj, ps, undefined) === undefined) {
-			copy();
-		}
+		if (mutable) copy();
 		let target = result;
 		for (let i = 0; i < path.length - 1; i++) {
 			const p = path[i];
-			if (target.hasOwnProperty(p)) {
-				target = expectObject(target[p]);
-				continue;
+			let t = _.get(target, p, undefined);
+			if (t === undefined) {
+				if (!mutable) {
+					return { target: {}, key: '' };
+				}
+				t = {};
+				target[p] = t;
+				target = t;
+			} else {
+				t = expectObject(t);
+				if (mutable) {
+					t = shallowCopy(t);
+					target[p] = t;
+				}
+				target = t;
 			}
-			target = target[p] = {};
 		}
 		return { target, key: path[path.length - 1] };
 	}
 
+	function hasPath(key) {
+		return _.get(obj, key, undefined) !== undefined;
+	}
+
+	function setPath(k, v) {
+		const { target, key } = findTarget(k, true);
+		target[key] = v;
+	}
+
 	function isNotChanged(k, v) {
-		const { target, key } = findTarget(k);
+		const { target, key } = findTarget(k, false);
 		return target[key] === v;
 	}
 
 	function set(k, v) {
 		if (isNotChanged(k, v)) return;
-		copy();
-		const { target, key } = findTarget(k);
 		if (_.isObject(v)) {
-			if (target.hasOwnProperty(key)) {
+			if (hasPath(k)) {
+				const { target, key } = findTarget(k, false);
 				const oldval = target[key];
 				const newval = applyPatch(oldval, v);
 				if (oldval === newval) return;
-				copy();
-				target[key] = newval;
+				setPath(k, newval);
 			} else {
-				copy();
-				result[key] = applyPatch({}, v);
+				setPath(k, applyPatch({}, v));
 			}
 		} else {
-			target[key] = v;
+			setPath(k, v);
 		}
 	}
 
 	function inc(k, v) {
-		copy();
-		const { target, key } = findTarget(k);
+		const { target, key } = findTarget(k, true);
 		target[key] = target[key] + v;
 	}
 
 	function dec(k, v) {
-		copy();
-		const { target, key } = findTarget(k);
+		const { target, key } = findTarget(k, true);
 		target[key] = target[key] - v;
 	}
 
 	function mul(k, v) {
-		copy();
-		const { target, key } = findTarget(k);
+		const { target, key } = findTarget(k, true);
 		target[key] = target[key] * v;
 	}
 
 	function getArray(k) {
-		copy();
-		const { target, key } = findTarget(k);
-		return expectArray(target[key]);
+		const { target, key } = findTarget(k, true);
+		const array = [...expectArray(target[key])];
+		target[key] = array;
+		return array;
 	}
 
 	function push(k, v) {
@@ -116,41 +138,41 @@ export function applyPatch(obj, patch) {
 		array.splice(v, 1);
 	}
 
-	_.forOwn(patch, (key, val) => {
+	_.forOwn(patch, (val, key) => {
 		if (key.charAt(0) === '$') {
 			switch (key) {
 			case '$set':
-				_.forOwn(val, set);
+				_.forOwn(val, (v, k) => set(k, v));
 				break;
 			case '$inc':
-				_.forOwn(val, (k, v) => {
+				_.forOwn(val, (v, k) => {
 					if (v === 0) return;
 					inc(k, v);
 				});
 				break;
 			case '$mul':
-				_.forOwn(val, (k, v) => {
+				_.forOwn(val, (v, k) => {
 					mul(k, v);
 				});
 				break;
 			case '$dec':
-				_.forOwn(val, (k, v) => {
+				_.forOwn(val, (v, k) => {
 					if (v === 0) return;
 					dec(k, v);
 				});
 				break;
 			case '$push':
-				_.forOwn(val, (k, v) => {
+				_.forOwn(val, (v, k) => {
 					push(k, v);
 				});
 				break;
 			case '$pop':
-				_.forOwn(val, (k, v) => {
+				_.forOwn(val, (v, k) => {
 					pop(k, v);
 				});
 				break;
 			case '$splice':
-				_.forOwn(val, (k, v) => {
+				_.forOwn(val, (v, k) => {
 					splice(k, v);
 				});
 				break;
