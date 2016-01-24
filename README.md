@@ -4,3 +4,7 @@
 
 # update-it
 Functions to update javascript object tree.
+
+## TODO
+* [ ] extract from [NeDB](https://github.com/louischatriot/nedb) function to filter JS array by MongoDB query
+to implement $pull and $pullall operators
