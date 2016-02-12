@@ -37,7 +37,7 @@
     "babel-preset-stage-0": "^6.5.0",
     "codecov.io": "^0.1.6",
     "deep-freeze-strict": "^1.1.1",
-    "eslint": "^1.10.3",
+    "eslint": "^2.0.0",
     "eslint-config-airbnb": "^5.0.0",
     "eslint-plugin-react": "^3.16.1",
     "expect.js": "^0.3.1",
