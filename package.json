@@ -1,6 +1,6 @@
 {
   "name": "update-it",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Functions to update javascript object tree.",
   "main": "lib/index.js",
   "scripts": {
