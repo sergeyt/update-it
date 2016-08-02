@@ -26,7 +26,7 @@ function expectArray(t) {
 	return t;
 }
 
-export function applyPatch(obj, patch) {
+export default function applyPatch(obj, patch) {
 	let result = obj;
 	let changed = false;
 
@@ -102,17 +102,17 @@ export function applyPatch(obj, patch) {
 
 	function inc(k, v) {
 		const { target, key } = findTarget(k, true);
-		target[key] = target[key] + v;
+		target[key] += v;
 	}
 
 	function dec(k, v) {
 		const { target, key } = findTarget(k, true);
-		target[key] = target[key] - v;
+		target[key] -= v;
 	}
 
 	function mul(k, v) {
 		const { target, key } = findTarget(k, true);
-		target[key] = target[key] * v;
+		target[key] *= v;
 	}
 
 	function getArray(k) {
@@ -187,5 +187,3 @@ export function applyPatch(obj, patch) {
 
 	return result;
 }
-
-export default applyPatch;
