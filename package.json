@@ -33,9 +33,9 @@
     "expect.js": "^0.3.1",
     "isparta": "^4.0.0",
     "mocha": "^3.0.0",
-    "react-devpack": "^0.1.39"
+    "react-devpack": "^0.1.49"
   },
   "dependencies": {
-    "lodash": "^4.13.1"
+    "lodash": "^4.14.1"
   }
 }
