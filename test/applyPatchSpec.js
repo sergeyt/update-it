@@ -1,4 +1,4 @@
-import { applyPatch } from '../src/patch';
+import applyPatch from '../src/patch';
 import freeze from 'deep-freeze-strict';
 import expect from 'expect.js';
 
