@@ -47,7 +47,7 @@ export default function applyPatch(obj, patch) {
 		const path = key.split('.');
 		if (mutable) copy();
 		let target = result;
-		for (let i = 0; i < path.length - 1; i++) {
+		for (let i = 0; i < path.length - 1; i += 1) {
 			const p = path[i];
 			let t = _.get(target, p, undefined);
 			if (t === undefined) {
