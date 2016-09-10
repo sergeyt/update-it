@@ -58,7 +58,7 @@ export function updateArray(array, updateItem) {
   let copied = false;
   let result = array;
   _.forEach(array, (t, i) => {
-    const u = updateItem(t);
+    const u = updateItem(t, i);
     if (u === t) {
       return;
     }
