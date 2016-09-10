@@ -50,25 +50,43 @@ function updateValue(val, update, isSelected) {
   return val;
 }
 
-function updateArrayImpl(array, update, isSelected) {
+function updateArrayImpl(array, update, isSelected = selectAny) {
+  return updateArray(array, t => updateObjectImpl(t, update, isSelected));
+}
+
+export function updateArray(array, updateItem) {
   let copied = false;
   let result = array;
-  array.forEach((t, i) => {
-    const t2 = updateObjectImpl(t, update, isSelected);
-    if (t2 === t) {
+  _.forEach(array, (t, i) => {
+    const u = updateItem(t);
+    if (u === t) {
       return;
     }
     if (!copied) {
       result = [...array];
       copied = true;
     }
-    result[i] = t2;
+    result[i] = u;
   });
   return result;
 }
 
-export function updateArray(array, update, isSelected = selectAny) {
-  return updateArrayImpl(array, makeUpdateFn(update), isSelected);
+export function updateArrayDeep(array, update, isSelected = selectAny) {
+  return updateArrayImpl(array, update, isSelected);
 }
 
 /* eslint-enable */
+
+export function removeById(list, id) {
+  return _.filter(list, t => t.id !== id);
+}
+
+export function replaceById(list, obj) {
+  const i = _.findIndex(list, t => t.id === obj.id);
+  if (i >= 0) {
+    const result = (list || []).slice();
+    result[i] = { ...result[i], ...obj };
+    return result;
+  }
+  return list;
+}
