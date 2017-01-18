@@ -32,7 +32,7 @@
     "deep-freeze-strict": "^1.1.1",
     "expect.js": "^0.3.1",
     "mocha": "^3.2.0",
-    "nyc": "^10.0.0",
+    "nyc": "^10.1.0",
     "react-devpack": "^0.2.13"
   },
   "dependencies": {
